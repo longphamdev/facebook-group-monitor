@@ -1,38 +1,61 @@
 // Function to extract post data from a DOM element
 // Note: Selectors are placeholders and need to be adjusted based on Facebook's actual DOM structure.
 function extractPostData(postElement) {
-  const postLinkElement = postElement.querySelector(
-    'a[href*="/posts/"], a[href*="/permalink/"]'
-  ); // Example selector
-  const postTextElement = postElement.querySelector(
-    '[data-ad-preview="message"], .userContent'
-  ); // Example selector
-  const timestampElement = postElement.querySelector("abbr[data-utime]"); // Example selector
+  // Extract facebook post link
+  const postLinkElement = postElement.querySelector('a[href*="/posts/"]');
+  const postUrl = postLinkElement?.href || null;
 
-  if (!postLinkElement || !timestampElement) {
-    // console.log("Skipping element, missing link or timestamp:", postElement);
-    return null;
+  // Extract time upload from post
+  const timeElement = postElement.querySelector('a[href*="/posts/"]');
+  const timeString = timeElement?.textContent?.trim() || "";
+
+  // convert to timestamp
+  const now = Date.now();
+  let timestamp = now; // Default to current time if parsing fails
+
+  if (timeString) {
+    if (timeString.includes("h")) {
+      const num = parseInt(timeString);
+      timestamp = now - num * 3600 * 1000; // Hours to milliseconds
+    } else if (timeString.includes("m")) {
+      const num = parseInt(timeString);
+      timestamp = now - num * 60 * 1000; // Minutes to milliseconds
+    } else if (timeString.includes("d")) {
+      const num = parseInt(timeString);
+      timestamp = now - num * 86400 * 1000; // Days to milliseconds
+    }
   }
 
-  const postUrl = postLinkElement.href;
-  const postId = postUrl.split("/").filter(Boolean).pop(); // Basic way to get an ID
-  const postText = postTextElement
-    ? postTextElement.innerText.trim()
-    : "No text found";
-  const timestamp =
-    parseInt(timestampElement.getAttribute("data-utime"), 10) * 1000; // Convert to milliseconds
+  // Extract post content
+  const postContentElement = postElement.querySelector(
+    'div[data-ad-rendering-role="story_message"] div.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.x1vvkbs'
+  );
+  const postContent = postContentElement?.textContent?.trim() || "No content";
 
-  if (!postId || isNaN(timestamp)) {
-    // console.log("Skipping element, invalid ID or timestamp:", postElement);
-    return null;
-  }
+  // Extract post ID from URL if available (format: /posts/123456789/)
+  const postId = postUrl ? postUrl.match(/\/posts\/(\d+)\//)?.[1] : "unknown";
 
   return {
     id: postId,
-    url: postUrl,
-    text: postText,
-    timestamp: timestamp,
+    url: postUrl || "No permalink",
+    text: postContent,
+    timestamp: timestamp || Date.now(),
   };
+}
+
+function getAllPosts() {
+  const postElements = document.querySelectorAll('div[role="article"]');
+
+  const posts = [];
+  postElements.forEach((postElement, index) => {
+    const postData = extractPostData(postElement);
+
+    if (postData) {
+      posts.push(postData);
+    }
+  });
+
+  return posts;
 }
 
 // Function to get all posts currently visible on the page
@@ -42,15 +65,13 @@ function getAllPosts() {
 
   const posts = [];
   // start at the second element to avoid the first one which are  filter options
-  for (let i = 1; i < postElements.length; i++) {
+  for (let i = 0; i < postElements.length; i++) {
     const postElement = postElements[i];
     const postData = extractPostData(postElement);
-    console.log("Post data extracted:", postData);
     if (postData) {
       posts.push(postData);
     }
   }
-
   return posts;
 }
 
@@ -93,7 +114,7 @@ function sendPostsToBackground(posts) {
 
 // Main function to orchestrate the process
 async function processPosts() {
-  // console.log("Processing posts...");
+  console.log("Processing posts...");
   const settings = await chrome.storage.local.get([
     "filterTime",
     "processedPostIds",
@@ -102,6 +123,9 @@ async function processPosts() {
   const processedPostIds = new Set(settings.processedPostIds || []);
 
   const allPosts = getAllPosts();
+  // DEBUG
+  console.log(`Total posts extracted:`, allPosts);
+
   const newPosts = filterNewPosts(allPosts, filterTimeHours, processedPostIds);
 
   if (newPosts.length > 0) {
@@ -113,7 +137,7 @@ async function processPosts() {
     });
     // console.log(`Updated processed post IDs. Total processed: ${processedPostIds.size}`);
   } else {
-    // console.log("No new posts found matching criteria.");
+    console.log("No new posts found matching criteria.");
   }
 }
 
