@@ -32,14 +32,34 @@ document.addEventListener('DOMContentLoaded', function() {
             botToken: botTokenInput.value,
             chatId: chatIdInput.value,
             refreshInterval: refreshIntervalInput.value,
-            filterTime: filterTimeInput.value
+            filterTime: filterTimeInput.value,
+            processedPostIds: [] // Reset processed posts when settings change
         };
 
+        // Validate required fields
+        if (!settings.postLink || !settings.botToken || !settings.chatId) {
+            alert('Please fill in all required fields (Post Link, Bot Token, Chat ID)');
+            return;
+        }
+
+        // Validate refresh interval
+        if (isNaN(settings.refreshInterval) || settings.refreshInterval < 1) {
+            alert('Refresh interval must be a number greater than 0');
+            return;
+        }
+
         chrome.storage.local.set(settings, function() {
-            // Optional: Provide feedback to the user
-            alert('Settings saved!');
-            // Optionally close the popup after saving
-            // window.close();
+            // Provide feedback to the user
+            const status = document.createElement('div');
+            status.textContent = 'Settings saved successfully!';
+            status.style.color = 'green';
+            status.style.marginTop = '10px';
+            saveButton.insertAdjacentElement('afterend', status);
+            
+            // Remove the status message after 3 seconds
+            setTimeout(() => {
+                status.remove();
+            }, 3000);
         });
     });
 });
