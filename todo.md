@@ -14,7 +14,7 @@
 2. **Field 2**: Input for Telegram bot token.
 3. **Field 3**: Input for Telegram chat ID.
 4. **Field 4**: Input for refresh interval in seconds.
-5. **Field 5**: Input for filtering posts by time (e.g., posts created within the last X hours).
+5. **Field 5**: Input for filtering posts by time (e.g., posts created within the last X minutes).
 
 #### Button
 
@@ -45,4 +45,4 @@
 
 4. **Notification**:
 
-    - Create a notification function that sends a message to the Telegram bot with the new posts.
+   - Create a notification function that sends a message to the Telegram bot with the new posts.

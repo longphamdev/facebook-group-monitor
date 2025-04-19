@@ -11,15 +11,15 @@ function extractPostData(postElement) {
 
   // convert to timestamp
   const now = Date.now();
-  let timestamp = now; // Default to current time if parsing fails
+  let timestamp = null; // Default to current time if parsing fails
 
   if (timeString) {
-    if (timeString.includes("h")) {
-      const num = parseInt(timeString);
-      timestamp = now - num * 3600 * 1000; // Hours to milliseconds
-    } else if (timeString.includes("m")) {
+    if (timeString.includes("m")) {
       const num = parseInt(timeString);
       timestamp = now - num * 60 * 1000; // Minutes to milliseconds
+    } else if (timeString.includes("h")) {
+      const num = parseInt(timeString);
+      timestamp = now - num * 3600 * 1000; // Hours to milliseconds
     } else if (timeString.includes("d")) {
       const num = parseInt(timeString);
       timestamp = now - num * 86400 * 1000; // Days to milliseconds
@@ -35,11 +35,21 @@ function extractPostData(postElement) {
   // Extract post ID from URL if available (format: /posts/123456789/)
   const postId = postUrl ? postUrl.match(/\/posts\/(\d+)\//)?.[1] : "unknown";
 
+  if (
+    postId === "unknown" ||
+    postUrl === null ||
+    postContent === "No content" ||
+    timestamp === null
+  ) {
+    console.log("Post ID not found for the post element:", postElement);
+    return null; // Skip this post if ID is not found
+  }
+
   return {
     id: postId,
-    url: postUrl || "No permalink",
+    url: postUrl,
     text: postContent,
-    timestamp: timestamp || Date.now(),
+    timestamp: timestamp,
   };
 }
 
@@ -82,8 +92,9 @@ function scrollToBottom() {
 }
 
 // Function to filter posts newer than a specific time
-function filterNewPosts(posts, filterTimeHours, processedPostIds) {
-  const filterTimestamp = Date.now() - filterTimeHours * 60 * 60 * 1000;
+function filterNewPosts(posts, filterTime, processedPostIds) {
+  const now = Date.now();
+  const filterTimestamp = now - filterTime * 60 * 1000;
   return posts.filter(
     (post) =>
       post.timestamp >= filterTimestamp && !processedPostIds.has(post.id)
@@ -119,14 +130,14 @@ async function processPosts() {
     "filterTime",
     "processedPostIds",
   ]);
-  const filterTimeHours = parseInt(settings.filterTime, 10) || 24; // Default to 24 hours if not set
+  const filterTime = parseInt(settings.filterTime, 10) || 60; // Default to 24 hours if not set
   const processedPostIds = new Set(settings.processedPostIds || []);
 
   const allPosts = getAllPosts();
   // DEBUG
   console.log(`Total posts extracted:`, allPosts);
 
-  const newPosts = filterNewPosts(allPosts, filterTimeHours, processedPostIds);
+  const newPosts = filterNewPosts(allPosts, filterTime, processedPostIds);
 
   if (newPosts.length > 0) {
     sendPostsToBackground(newPosts);
