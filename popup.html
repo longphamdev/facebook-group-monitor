@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Facebook Post Tracker</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        width: 300px;
+        padding: 10px;
+      }
+      label {
+        display: block;
+        margin-top: 10px;
+      }
+      input[type="text"],
+      input[type="number"] {
+        width: 95%;
+        padding: 5px;
+        margin-top: 5px;
+      }
+      button {
+        margin-top: 15px;
+        padding: 10px 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Facebook Post Tracker</h1>
+    <p>Track your Facebook group posts and send them to your Telegram bot.</p>
+
+    <label for="postLink">Facebook Post Link:</label>
+    <input type="text" id="postLink" name="postLink" />
+
+    <label for="botToken">Telegram Bot Token:</label>
+    <input type="text" id="botToken" name="botToken" />
+
+    <label for="chatId">Telegram Chat ID:</label>
+    <input type="text" id="chatId" name="chatId" />
+
+    <label for="refreshInterval">Refresh Interval (seconds):</label>
+    <input type="number" id="refreshInterval" name="refreshInterval" min="1" />
+
+    <label for="filterTimeSeconds">Filter Posts Newer Than (seconds):</label>
+    <input
+      type="number"
+      id="filterTimeSeconds"
+      name="filterTimeSeconds"
+      min="0"
+    />
+
+    <button id="saveSettings">Save Settings</button>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
