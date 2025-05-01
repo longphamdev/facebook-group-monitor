@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         chrome.storage.local.set(settings, function() {
             if (chrome.runtime.lastError) {
-                console.error('Error saving settings:', chrome.runtime.lastError);
+                console.log('Error saving settings:', chrome.runtime.lastError);
                 const status = document.createElement('div');
                 status.textContent = 'Error saving settings!';
                 status.style.color = 'red';

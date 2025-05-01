@@ -101,26 +101,35 @@ function filterNewPosts(posts, filterTime, processedPostIds) {
   );
 }
 
-// Function to send posts to the background script
-function sendPostsToBackground(posts) {
-  if (posts.length > 0) {
-    // console.log(`Sending ${posts.length} new posts to background script.`);
-    chrome.runtime.sendMessage(
-      { type: "NEW_POSTS", posts: posts },
-      (response) => {
-        if (chrome.runtime.lastError) {
-          console.error(
-            "Error sending message to background:",
-            chrome.runtime.lastError.message
-          );
-        } else {
-          // console.log("Background script responded:", response);
-        }
-      }
-    );
-  } else {
-    // console.log("No new posts to send to background.");
+// Function to send posts to the background script with retry logic
+function sendPostsToBackground(posts, attempt = 1) {
+  if (posts.length === 0) {
+    console.log("No new posts to send to background.");
+    return;
   }
+
+  console.log(
+    `Attempt ${attempt}: Sending ${posts.length} posts to background`
+  );
+  chrome.runtime.sendMessage(
+    { type: "NEW_POSTS", posts: posts },
+    (response) => {
+      if (chrome.runtime.lastError) {
+        console.log(
+          "Error sending message to background:",
+          chrome.runtime.lastError.message
+        );
+        // Retry up to 3 times with increasing delay
+        if (attempt < 3) {
+          const delay = attempt * 1000; // 1s, 2s, 3s
+          console.log(`Retrying in ${delay}ms...`);
+          setTimeout(() => sendPostsToBackground(posts, attempt + 1), delay);
+        }
+      } else {
+        console.log("Background script responded:", response);
+      }
+    }
+  );
 }
 
 // Main function to orchestrate the process
@@ -164,10 +173,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           sendResponse({ status: "processed" });
         })
         .catch((error) => {
-          console.error("Error processing posts after scroll:", error);
+          console.log("Error processing posts after scroll:", error);
           sendResponse({ status: "error", message: error.message });
         });
-    }, 3000); // Adjust delay as needed
+    }, 5000); // Adjust delay as needed
     return true; // Indicates response will be sent asynchronously
   } else if (request.type === "EXTRACT_POSTS_ONLY") {
     // Directly process posts without scrolling (e.g., on initial load)
@@ -176,7 +185,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ status: "processed" });
       })
       .catch((error) => {
-        console.error("Error processing posts:", error);
+        console.log("Error processing posts:", error);
         sendResponse({ status: "error", message: error.message });
       });
     return true; // Indicates response will be sent asynchronously

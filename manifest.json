@@ -8,9 +8,9 @@
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icon.jpeg",
-      "48": "icon.jpeg",
-      "128": "icon.jpeg"
+      "16": "icon16.jpeg",
+      "32": "icon32.jpeg",
+      "48": "icon48.jpeg"
     }
   },
   "background": {
@@ -23,8 +23,8 @@
     }
   ],
   "icons": {
-    "16": "icon.jpeg",
-    "48": "icon.jpeg",
-    "128": "icon.jpeg"
+    "16": "icon16.jpeg",
+    "48": "icon48.jpeg",
+    "128": "icon128.jpeg"
   }
 }

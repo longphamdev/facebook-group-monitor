@@ -82,7 +82,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
         console.log(`Found tab ${tabId} with URL ${postLink}. Refreshing...`);
         chrome.tabs.reload(tabId, () => {
           if (chrome.runtime.lastError) {
-            console.error(
+            console.log(
               `Error reloading tab ${tabId}:`,
               chrome.runtime.lastError.message
             );
@@ -94,12 +94,14 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
                 tabId,
                 { type: "SCROLL_AND_EXTRACT" },
                 (response) => {
-                  console.log("Message sent to content script.", response);
-                  // if (chrome.runtime.lastError) {
-                  //     console.error("Error sending message to content script:", chrome.runtime.lastError.message);
-                  // } else if (response) {
-                  //     console.log("Content script response:", response);
-                  // }
+                  if (chrome.runtime.lastError) {
+                    console.log(
+                      "Error sending message to content script:",
+                      chrome.runtime.lastError.message
+                    );
+                  } else if (response) {
+                    console.log("Content script response:", response);
+                  }
                 }
               );
             }, 5000); // Wait 5 seconds for page to load
@@ -116,7 +118,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 async function sendToTelegram(post) {
   const settings = await chrome.storage.local.get(["botToken", "chatId"]);
   if (!settings.botToken || !settings.chatId) {
-    console.error("Telegram bot token or chat ID not configured");
+    console.log("Telegram bot token or chat ID not configured");
     return;
   }
 
@@ -138,12 +140,12 @@ async function sendToTelegram(post) {
 
     const data = await response.json();
     if (!data.ok) {
-      console.error("Telegram API error:", data.description);
+      console.log("Telegram API error:", data.description);
     } else {
       console.log("Message sent to Telegram successfully");
     }
   } catch (error) {
-    console.error("Error sending to Telegram:", error);
+    console.log("Error sending to Telegram:", error);
   }
 }
 
@@ -153,13 +155,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log(
       `Received ${request.posts.length} new posts from content script`
     );
-    request.posts.forEach((post) => {
-      sendToTelegram(post).catch((error) => {
-        console.error("Error processing post:", post.id, error);
+
+    // Process all posts in parallel
+    Promise.all(
+      request.posts.map((post) =>
+        sendToTelegram(post).catch((error) => {
+          console.log(`Error processing post ${post.id}:`, error);
+          return { id: post.id, status: "failed", error };
+        })
+      )
+    ).then((results) => {
+      const successCount = results.filter((r) => r && !r.error).length;
+      const failCount = results.length - successCount;
+      console.log(
+        `Processed ${successCount} posts successfully, ${failCount} failed`
+      );
+      sendResponse({
+        status: "processed",
+        successCount,
+        failCount,
       });
     });
-    sendResponse({ status: "received" });
-    return true;
+
+    return true; // Keep message channel open for async response
   }
 });
 
