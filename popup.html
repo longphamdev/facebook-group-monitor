@@ -1,55 +1,75 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Facebook Post Tracker</title>
+    <title>Group Post Tracker</title>
     <style>
       body {
-        font-family: sans-serif;
-        width: 300px;
+        font-family: Arial, sans-serif;
         padding: 10px;
+        width: 400px;
       }
       label {
         display: block;
-        margin-top: 10px;
+        margin: 8px 0 4px;
+        font-size: 14px;
       }
-      input[type="text"],
-      input[type="number"] {
-        width: 95%;
-        padding: 5px;
-        margin-top: 5px;
+      input {
+        width: 100%;
+        padding: 6px;
+        margin-bottom: 8px;
+        box-sizing: border-box;
       }
       button {
-        margin-top: 15px;
-        padding: 10px 15px;
+        padding: 8px 12px;
+        background: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        margin-bottom: 8px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      #testResult {
+        font-size: 12px;
+        margin-top: 5px;
+        display: none;
+      }
+      #testResult.success {
+        color: green;
+      }
+      #testResult.error {
+        color: red;
       }
     </style>
   </head>
   <body>
-    <h1>Facebook Post Tracker</h1>
-    <p>Track your Facebook group posts and send them to your Telegram bot.</p>
-
-    <label for="postLink">Facebook Post Link:</label>
-    <input type="text" id="postLink" name="postLink" />
-
-    <label for="botToken">Telegram Bot Token:</label>
-    <input type="text" id="botToken" name="botToken" />
-
-    <label for="chatId">Telegram Chat ID:</label>
-    <input type="text" id="chatId" name="chatId" />
-
-    <label for="refreshInterval">Refresh Interval (seconds):</label>
-    <input type="number" id="refreshInterval" name="refreshInterval" min="1" />
-
-    <label for="filterTimeSeconds">Filter Posts Newer Than (seconds):</label>
+    <h2>Group Post Tracker Settings</h2>
+    <label for="telegramBotToken">Token Bot:</label>
     <input
-      type="number"
-      id="filterTimeSeconds"
-      name="filterTimeSeconds"
-      min="0"
+      type="text"
+      id="telegramBotToken"
+      placeholder="e.g., 123456:ABC-DEF..."
     />
-
-    <button id="saveSettings">Save Settings</button>
-
+    <label for="telegramChatId">Chat ID:</label>
+    <input type="text" id="telegramChatId" placeholder="e.g., -123456789" />
+    <label for="groupUrl">Link Facebook Group:</label>
+    <input
+      type="text"
+      id="groupUrl"
+      placeholder="e.g., https://www.facebook.com/groups/yourgroupid"
+    />
+    <label for="refreshInterval">Time Interval Refresh (seconds):</label>
+    <input type="number" id="refreshInterval" placeholder="e.g., 60" min="10" />
+    <label for="scanRange">Range to Scan Post (seconds):</label>
+    <input type="number" id="scanRange" placeholder="e.g., 2" min="1" />
+    <button id="save">Save</button>
+    <button id="testSend">Test Send Message</button>
+    <div id="testResult"></div>
     <script src="popup.js"></script>
+    <script src="telegramService.js"></script>
+    <script src="storageService.js"></script>
+    <script src="content.js"></script>
   </body>
 </html>

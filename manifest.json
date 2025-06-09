@@ -3,14 +3,15 @@
   "name": "Facebook Post Tracker",
   "version": "1.0",
   "description": "Track your Facebook group posts and send them to your Telegram bot.",
-  "permissions": ["storage", "alarms", "tabs", "scripting"],
+  "permissions": ["storage", "alarms", "tabs", "scripting", "activeTab"],
   "host_permissions": ["*://*.facebook.com/*"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icon16.png",
       "32": "icon32.png",
-      "48": "icon48.png"
+      "48": "icon48.png",
+      "128": "icon128.png"
     }
   },
   "background": {
@@ -19,11 +20,17 @@
   "content_scripts": [
     {
       "matches": ["*://*.facebook.com/*"],
-      "js": ["content.js"]
+      "js": [
+        "storageService.js",
+        "telegramService.js",
+        "postExtractor.js",
+        "content.js"
+      ]
     }
   ],
   "icons": {
     "16": "icon16.png",
+    "32": "icon32.png",
     "48": "icon48.png",
     "128": "icon128.png"
   }

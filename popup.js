@@ -1,75 +1,89 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const postLinkInput = document.getElementById('postLink');
-    const botTokenInput = document.getElementById('botToken');
-    const chatIdInput = document.getElementById('chatId');
-    const refreshIntervalInput = document.getElementById('refreshInterval');
-    const filterTimeInput = document.getElementById('filterTimeSeconds');
-    const saveButton = document.getElementById('saveSettings');
+document.getElementById("save").addEventListener("click", async () => {
+  const telegramBotToken = document.getElementById("telegramBotToken").value;
+  const telegramChatId = document.getElementById("telegramChatId").value;
+  const groupUrl = document.getElementById("groupUrl").value;
+  const refreshInterval =
+    parseInt(document.getElementById("refreshInterval").value) || 60;
+  const scanRange = parseInt(document.getElementById("scanRange").value) || 2;
 
-    // Load saved settings when the popup opens
-    chrome.storage.local.get(['postLink', 'botToken', 'chatId', 'refreshInterval', 'filterTimeSeconds'], function(result) {
-        if (result.postLink) {
-            postLinkInput.value = result.postLink;
-        }
-        if (result.botToken) {
-            botTokenInput.value = result.botToken;
-        }
-        if (result.chatId) {
-            chatIdInput.value = result.chatId;
-        }
-        if (result.refreshInterval) {
-            refreshIntervalInput.value = result.refreshInterval;
-        }
-        if (result.filterTimeSeconds) {
-            filterTimeInput.value = Math.floor(result.filterTimeSeconds / 60); // Convert seconds to minutes
-        }
-    });
+  console.log("Saving settings:", {
+    telegramBotToken,
+    telegramChatId,
+    groupUrl,
+    refreshInterval,
+    scanRange,
+  });
+  //   // Get existing settings to merge with new values
+  //   const existingSettings = await (window.storageService?.getSettings() ||
+  //     Promise.resolve({}));
+  //   const newSettings = {
+  //     ...existingSettings,
+  //     telegramBotToken:
+  //       telegramBotToken || existingSettings.telegramBotToken || "",
+  //     telegramChatId: telegramChatId || existingSettings.telegramChatId || "",
+  //     groupUrl: groupUrl || existingSettings.groupUrl || "",
+  //     refreshInterval:
+  //       (refreshInterval >= 10
+  //         ? refreshInterval
+  //         : existingSettings.refreshInterval) || 60,
+  //     scanRange: (scanRange >= 1 ? scanRange : existingSettings.scanRange) || 2,
+  //   };
 
-    // Save settings when the button is clicked
-    saveButton.addEventListener('click', function() {
-        const settings = {
-            postLink: postLinkInput.value,
-            botToken: botTokenInput.value,
-            chatId: chatIdInput.value,
-            refreshInterval: refreshIntervalInput.value,
-            filterTimeSeconds: filterTimeInput.value * 60, // Convert minutes to seconds
-            processedPostIds: [] // Reset processed posts when settings change
-        };
+  //   await window.storageService?.setSettings(newSettings);
+  //   chrome.runtime.sendMessage({ action: "startTracking" });
+  //   alert("Settings saved and tracking started!");
+  // });
 
-        // Validate required fields
-        if (!settings.postLink || !settings.botToken || !settings.chatId) {
-            alert('Please fill in all required fields (Post Link, Bot Token, Chat ID)');
-            return;
-        }
+  // document.getElementById("testSend").addEventListener("click", async () => {
+  //   const telegramBotToken = document.getElementById("telegramBotToken").value;
+  //   const telegramChatId = document.getElementById("telegramChatId").value;
+  //   const testResult = document.getElementById("testResult");
 
-        // Validate refresh interval
-        if (isNaN(settings.refreshInterval) || settings.refreshInterval < 1) {
-            alert('Refresh interval must be a number greater than 0');
-            return;
-        }
-
-        chrome.storage.local.set(settings, function() {
-            if (chrome.runtime.lastError) {
-                console.log('Error saving settings:', chrome.runtime.lastError);
-                const status = document.createElement('div');
-                status.textContent = 'Error saving settings!';
-                status.style.color = 'red';
-                status.style.marginTop = '10px';
-                saveButton.insertAdjacentElement('afterend', status);
-                setTimeout(() => status.remove(), 3000);
-            } else {
-                // Provide feedback to the user
-                const status = document.createElement('div');
-                status.textContent = 'Settings saved successfully!';
-                status.style.color = 'green';
-                status.style.marginTop = '10px';
-                saveButton.insertAdjacentElement('afterend', status);
-                
-                // Remove the status message after 3 seconds
-                setTimeout(() => {
-                    status.remove();
-                }, 3000);
-            }
-        });
-    });
+  //   if (telegramBotToken && telegramChatId) {
+  //     try {
+  //       await window.sendToTelegram(
+  //         telegramBotToken,
+  //         telegramChatId,
+  //         "Test message from Group Post Tracker"
+  //       );
+  //       testResult.style.display = "block";
+  //       testResult.style.color = "#28a745";
+  //       testResult.textContent = "Test message sent successfully!";
+  //       setTimeout(() => {
+  //         testResult.style.display = "none";
+  //       }, 3000);
+  //     } catch (error) {
+  //       testResult.style.display = "block";
+  //       testResult.style.color = "#dc3545";
+  //       testResult.textContent = "Test failed. Check token and chat ID.";
+  //       setTimeout(() => {
+  //         testResult.style.display = "none";
+  //       }, 3000);
+  //     }
+  //   } else {
+  //     testResult.style.display = "block";
+  //     testResult.style.color = "#dc3545";
+  //     testResult.textContent = "Please enter token and chat ID first.";
+  //     setTimeout(() => {
+  //       testResult.style.display = "none";
+  //     }, 3000);
+  //   }
 });
+
+// Load saved settings
+async function loadSettings() {
+  try {
+    const data = await (window.storageService?.getSettings() ||
+      Promise.resolve({}));
+    document.getElementById("telegramBotToken").value =
+      data.telegramBotToken || "";
+    document.getElementById("telegramChatId").value = data.telegramChatId || "";
+    document.getElementById("groupUrl").value = data.groupUrl || "";
+    document.getElementById("refreshInterval").value =
+      data.refreshInterval || "60";
+    document.getElementById("scanRange").value = data.scanRange || "2";
+  } catch (error) {
+    console.error("Failed to load settings:", error);
+  }
+}
+loadSettings();
