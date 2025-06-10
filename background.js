@@ -87,7 +87,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       .executeScript({
         target: { tabId: tabId },
         func: () => {
-          window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+          window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: "smooth",
+          });
         },
       })
       .catch((error) => console.error("Auto-scroll injection failed:", error));
@@ -100,22 +103,26 @@ async function saveTrackingState() {
       trackingState: {
         isTracking,
         trackingSettings,
-        currentTabId
-      }
+        currentTabId,
+      },
     });
   } catch (error) {
-    console.error('Error saving tracking state:', error);
+    console.error("Error saving tracking state:", error);
   }
 }
 
 async function restoreTrackingState() {
   try {
-    const result = await chrome.storage.local.get(['trackingState']);
+    const result = await chrome.storage.local.get(["trackingState"]);
     if (result.trackingState) {
-      const { isTracking: wasTracking, trackingSettings: savedSettings, currentTabId: savedTabId } = result.trackingState;
+      const {
+        isTracking: wasTracking,
+        trackingSettings: savedSettings,
+        currentTabId: savedTabId,
+      } = result.trackingState;
 
       if (wasTracking && savedSettings) {
-        console.log('Restoring tracking state...');
+        console.log("Restoring tracking state...");
         trackingSettings = savedSettings;
         currentTabId = savedTabId;
         isTracking = true;
@@ -131,7 +138,7 @@ async function restoreTrackingState() {
       }
     }
   } catch (error) {
-    console.error('Error restoring tracking state:', error);
+    console.error("Error restoring tracking state:", error);
   }
 }
 
@@ -147,14 +154,14 @@ async function startTrackingProcess() {
 
     if (tabs.length > 0) {
       targetTab = tabs[0];
-      console.log('Found existing tab:', targetTab.id);
+      console.log("Found existing tab:", targetTab.id);
     } else {
       // Create new tab with tracking URL
       targetTab = await chrome.tabs.create({
         url: trackingSettings.trackingUrl,
-        active: false
+        active: false,
       });
-      console.log('Created new tab:', targetTab.id);
+      console.log("Created new tab:", targetTab.id);
     }
 
     currentTabId = targetTab.id;
@@ -163,7 +170,7 @@ async function startTrackingProcess() {
     // Start the refresh cycle immediately
     startRefreshCycle();
   } catch (error) {
-    console.error('Error starting tracking process:', error);
+    console.error("Error starting tracking process:", error);
   }
 }
 
@@ -172,7 +179,9 @@ function startRefreshCycle() {
     return;
   }
 
-  console.log(`Starting refresh cycle every ${trackingSettings.refreshTime} seconds`);
+  console.log(
+    `Starting refresh cycle every ${trackingSettings.refreshTime} seconds`
+  );
 
   // Set up interval for refreshing (refreshTime is in seconds)
   trackingInterval = setInterval(async () => {
@@ -185,22 +194,23 @@ function startRefreshCycle() {
       // Validate tab exists before attempting operations
       const isValidTab = await validateTab(currentTabId);
       if (!isValidTab) {
-        console.log('Tab is invalid, attempting to recreate...');
+        console.log("Tab is invalid, attempting to recreate...");
         await recreateTrackingTab();
         return;
       }
 
       // Refresh the page
-      console.log('Attempting to reload tab:', currentTabId);
+      console.log("Attempting to reload tab:", currentTabId);
       await chrome.tabs.reload(currentTabId);
-      console.log('Page refreshed successfully');
-
+      console.log("Page refreshed successfully");
     } catch (error) {
-      console.error('Error refreshing page:', error);
+      console.error("Error refreshing page:", error);
       // If reload fails, the tab might be invalid
       const isValid = await validateTab(currentTabId);
       if (!isValid) {
-        console.log('Tab invalid after reload attempt, will recreate on next cycle');
+        console.log(
+          "Tab invalid after reload attempt, will recreate on next cycle"
+        );
       }
     }
   }, trackingSettings.refreshTime * 1000); // Convert seconds to milliseconds
@@ -211,16 +221,21 @@ async function validateTab(tabId) {
 
   try {
     const tab = await chrome.tabs.get(tabId);
-    return tab && tab.url && tab.url.includes('facebook.com') && tab.status !== 'unloaded';
+    return (
+      tab &&
+      tab.url &&
+      tab.url.includes("facebook.com") &&
+      tab.status !== "unloaded"
+    );
   } catch (error) {
-    console.error('Tab validation failed:', error);
+    console.error("Tab validation failed:", error);
     return false;
   }
 }
 
 async function recreateTrackingTab() {
   if (!trackingSettings.trackingUrl) {
-    console.error('Cannot recreate tab: no tracking URL');
+    console.error("Cannot recreate tab: no tracking URL");
     return;
   }
 
@@ -234,18 +249,18 @@ async function recreateTrackingTab() {
 
     if (tabs.length > 0) {
       targetTab = tabs[0];
-      console.log('Found existing tab:', targetTab.id);
+      console.log("Found existing tab:", targetTab.id);
     } else {
       targetTab = await chrome.tabs.create({
         url: trackingSettings.trackingUrl,
-        active: false
+        active: false,
       });
-      console.log('Created new tab:', targetTab.id);
+      console.log("Created new tab:", targetTab.id);
     }
 
     currentTabId = targetTab.id;
     saveTrackingState();
   } catch (error) {
-    console.error('Error recreating tracking tab:', error);
+    console.error("Error recreating tracking tab:", error);
   }
 }
