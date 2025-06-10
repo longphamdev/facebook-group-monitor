@@ -43,6 +43,11 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   if (tablinks.length) tablinks[0].click();
 
+  /**
+   * Loads saved tracking and integration settings from Chrome's synchronized storage and updates the corresponding UI fields.
+   *
+   * Displays an error status message if settings cannot be loaded.
+   */
   async function loadSettings() {
     try {
       const result = await chrome.storage.sync.get([
@@ -68,6 +73,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  /**
+   * Saves the current tracking and integration settings to Chrome's synchronized storage.
+   *
+   * Validates that the tracking URL is present and contains "facebook.com" before saving. On success, displays a confirmation message and notifies the runtime to update settings. Shows an error message if validation fails or if saving encounters an error.
+   */
   async function saveSettings() {
     const settings = {
       trackingUrl: trackingUrlInput.value.trim(),
@@ -100,6 +110,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  /**
+   * Updates the UI to reflect the current tracking status by querying the extension runtime.
+   *
+   * Displays whether tracking is "Running" or "Stopped" and applies corresponding color coding.
+   */
   async function updateTrackingStatus() {
     try {
       const response = await chrome.runtime.sendMessage({
@@ -113,6 +128,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  /**
+   * Displays a status message with styling based on the message type and hides it after 5 seconds.
+   *
+   * @param {string} message - The message to display to the user.
+   * @param {string} type - The type of message, such as "success" or "error", which determines the styling.
+   */
   function showStatus(message, type) {
     statusDiv.textContent = message;
     statusDiv.className = `status ${type}`;
@@ -123,6 +144,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 5000); // Hide after 5 seconds
   }
 
+  /**
+   * Initiates the tracking process using the current settings from the UI.
+   *
+   * Displays a success or error message based on the outcome and updates the tracking status indicator.
+   * If the tracking URL is missing, prompts the user to save settings first.
+   */
   async function startTracking() {
     const settings = {
       trackingUrl: trackingUrlInput.value.trim(),
@@ -153,6 +180,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  /**
+   * Sends a request to stop the tracking process and updates the UI based on the result.
+   *
+   * Displays a success message and refreshes the tracking status if stopping succeeds; otherwise, shows an error message.
+   */
   async function stopTracking() {
     try {
       const response = await chrome.runtime.sendMessage({
@@ -168,6 +200,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  /**
+   * Sends a request to clear the sent list and displays a status message based on the result.
+   *
+   * @remark
+   * Shows a success message if the sent list is cleared, or an error message if the operation fails.
+   */
   async function clearSentList() {
     try {
       const response = await chrome.runtime.sendMessage({
