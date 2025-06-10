@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
   const trackingUrlInput = document.getElementById("trackingUrl");
-  const afterCurrentTimeInput = document.getElementById("afterCurrentTime");
   const refreshTimeInput = document.getElementById("refreshTime");
   const saveButton = document.getElementById("saveSettings");
   const startButton = document.getElementById("startTracking");
@@ -8,6 +7,11 @@ document.addEventListener("DOMContentLoaded", function () {
   const statusDiv = document.getElementById("status");
   const trackingStatusDiv = document.getElementById("trackingStatus");
   const statusText = document.getElementById("statusText");
+  const timeOption = document.getElementById("timeOption");
+  const telegramChatId = document.getElementById("telegramChatId");
+  const telegramThreadId = document.getElementById("telegramThreadId");
+  const telegramBotToken = document.getElementById("telegramBotToken");
+  const clearHistoryButton = document.getElementById("clearHistory");
 
   // Load saved settings and status on startup
   loadSettings();
@@ -17,18 +21,44 @@ document.addEventListener("DOMContentLoaded", function () {
   saveButton.addEventListener("click", saveSettings);
   startButton.addEventListener("click", startTracking);
   stopButton.addEventListener("click", stopTracking);
+  if (clearHistoryButton) {
+    clearHistoryButton.addEventListener("click", async () => {
+      await chrome.storage.local.remove("sentPosts");
+      showStatus("Sent history cleared!", "success");
+    });
+  }
+
+  // Tab logic (CSP-safe, no inline handlers)
+  const tablinks = document.querySelectorAll('.tablinks');
+  const tabcontents = document.querySelectorAll('.tabcontent');
+  tablinks.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabcontents.forEach(tc => { tc.style.display = 'none'; tc.classList.remove('active'); });
+      tablinks.forEach(tl => tl.classList.remove('active'));
+      const tabId = btn.getAttribute('data-tab');
+      document.getElementById(tabId).style.display = 'block';
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+    });
+  });
+  if (tablinks.length) tablinks[0].click();
 
   async function loadSettings() {
     try {
       const result = await chrome.storage.sync.get([
         "trackingUrl",
-        "afterCurrentTime",
         "refreshTime",
+        "timeOption",
+        "telegramChatId",
+        "telegramThreadId",
+        "telegramBotToken"
       ]);
-
       trackingUrlInput.value = result.trackingUrl || "";
-      afterCurrentTimeInput.value = result.afterCurrentTime || 5;
-      refreshTimeInput.value = result.refreshTime || 30;
+      refreshTimeInput.value = result.refreshTime || 60;
+      timeOption.value = result.timeOption || "10";
+      telegramChatId.value = result.telegramChatId || "";
+      telegramThreadId.value = result.telegramThreadId || "";
+      telegramBotToken.value = result.telegramBotToken || "";
     } catch (error) {
       showStatus("Error loading settings", "error");
     }
@@ -37,26 +67,24 @@ document.addEventListener("DOMContentLoaded", function () {
   async function saveSettings() {
     const settings = {
       trackingUrl: trackingUrlInput.value.trim(),
-      afterCurrentTime: parseInt(afterCurrentTimeInput.value) || 5,
-      refreshTime: parseInt(refreshTimeInput.value) || 30,
+      refreshTime: parseInt(refreshTimeInput.value) || 60,
+      timeOption: timeOption.value,
+      telegramChatId: telegramChatId.value,
+      telegramThreadId: telegramThreadId.value,
+      telegramBotToken: telegramBotToken.value
     };
-
     // Validate URL
     if (!settings.trackingUrl) {
       showStatus("Please enter a tracking URL", "error");
       return;
     }
-
     if (!settings.trackingUrl.includes("facebook.com")) {
       showStatus("Please enter a valid Facebook URL", "error");
       return;
     }
-
     try {
       await chrome.storage.sync.set(settings);
       showStatus("Settings saved successfully!", "success");
-
-      // Send settings to background script
       chrome.runtime.sendMessage({
         action: "updateSettings",
         settings: settings,
@@ -65,6 +93,7 @@ document.addEventListener("DOMContentLoaded", function () {
       showStatus("Error saving settings", "error");
     }
   }
+
   async function updateTrackingStatus() {
     try {
       const response = await chrome.runtime.sendMessage({
@@ -91,26 +120,25 @@ document.addEventListener("DOMContentLoaded", function () {
   async function startTracking() {
     const settings = {
       trackingUrl: trackingUrlInput.value.trim(),
-      afterCurrentTime: parseInt(afterCurrentTimeInput.value) || 5,
-      refreshTime: parseInt(refreshTimeInput.value) || 30,
+      refreshTime: parseInt(refreshTimeInput.value) || 60,
+      timeOption: timeOption.value,
+      telegramChatId: telegramChatId.value,
+      telegramThreadId: telegramThreadId.value,
+      telegramBotToken: telegramBotToken.value
     };
-
     if (!settings.trackingUrl) {
       showStatus("Please save settings first", "error");
       return;
     }
-
     try {
       const response = await chrome.runtime.sendMessage({
         action: "startTracking",
         settings: settings,
       });
-
       if (response.success) {
         showStatus("Tracking started!", "success");
         updateTrackingStatus();
       }
-
     } catch (error) {
       showStatus("Error starting tracking", "error");
       console.error("Error starting tracking:", error);
