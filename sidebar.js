@@ -95,6 +95,13 @@ document.addEventListener("DOMContentLoaded", function () {
         action: "updateSettings",
         settings: settings,
       });
+      // stop tracking if it was running
+      const response = await chrome.runtime.sendMessage({
+        action: "stopTracking",
+      });
+      if (response.success) {
+        updateTrackingStatus();
+      }
     } catch (error) {
       showStatus("Error saving settings", "error");
     }
