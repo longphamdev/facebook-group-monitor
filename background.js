@@ -76,6 +76,24 @@ function getStatus(sendResponse) {
   sendResponse({ isTracking, settings: trackingSettings });
 }
 
+// Inject scroll to bottom after every reload to fetch more data
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (
+    tabId === currentTabId &&
+    changeInfo.status === "complete" &&
+    isTracking
+  ) {
+    chrome.scripting
+      .executeScript({
+        target: { tabId: tabId },
+        func: () => {
+          window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+        },
+      })
+      .catch((error) => console.error("Auto-scroll injection failed:", error));
+  }
+});
+
 async function saveTrackingState() {
   try {
     await chrome.storage.local.set({
