@@ -133,7 +133,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             setTimeout(() => {
               window.removeEventListener("scroll", handle);
               resolve("timeout");
-            }, 5000);
+            }, 10000);
           });
         },
       })
@@ -378,7 +378,9 @@ function sendNotification(posts) {
     return;
   }
   // send to telegram
-  posts.forEach((post) => sendToTelegram(post));
+  if (trackingSettings.enableTelegram) {
+    posts.forEach((post) => sendToTelegram(post));
+  }
 }
 
 async function sendToTelegram(post) {

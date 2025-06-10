@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const telegramThreadId = document.getElementById("telegramThreadId");
   const telegramBotToken = document.getElementById("telegramBotToken");
   const clearSentListButton = document.getElementById("clearSentList");
+  const enableTelegram = document.getElementById("enableTelegram");
+  const enableDiscord = document.getElementById("enableDiscord");
 
   // Load saved settings and status on startup
   loadSettings();
@@ -50,6 +52,8 @@ document.addEventListener("DOMContentLoaded", function () {
         "telegramChatId",
         "telegramThreadId",
         "telegramBotToken",
+        "enableTelegram",
+        "enableDiscord",
       ]);
       trackingUrlInput.value = result.trackingUrl || "";
       refreshTimeInput.value = result.refreshTime || 60;
@@ -57,6 +61,8 @@ document.addEventListener("DOMContentLoaded", function () {
       telegramChatId.value = result.telegramChatId || "";
       telegramThreadId.value = result.telegramThreadId || "";
       telegramBotToken.value = result.telegramBotToken || "";
+      enableTelegram.checked = !!result.enableTelegram;
+      enableDiscord.checked = !!result.enableDiscord;
     } catch (error) {
       showStatus("Error loading settings", "error");
     }
@@ -70,6 +76,8 @@ document.addEventListener("DOMContentLoaded", function () {
       telegramChatId: telegramChatId.value,
       telegramThreadId: telegramThreadId.value,
       telegramBotToken: telegramBotToken.value,
+      enableTelegram: enableTelegram.checked,
+      enableDiscord: enableDiscord.checked,
     };
     // Validate URL
     if (!settings.trackingUrl) {
@@ -123,6 +131,8 @@ document.addEventListener("DOMContentLoaded", function () {
       telegramChatId: telegramChatId.value,
       telegramThreadId: telegramThreadId.value,
       telegramBotToken: telegramBotToken.value,
+      enableTelegram: enableTelegram.checked,
+      enableDiscord: enableDiscord.checked,
     };
     if (!settings.trackingUrl) {
       showStatus("Please save settings first", "error");

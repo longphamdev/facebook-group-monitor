@@ -179,6 +179,24 @@
       .tabcontent.active {
         display: block;
       }
+      .notification-section-title {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 8px;
+        margin-top: 20px;
+        color: #1877f2;
+      }
+      .notification-enable-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+      .notification-enable-row label {
+        font-weight: normal;
+        margin-bottom: 0;
+        color: #333;
+      }
     </style>
   </head>
   <body>
@@ -214,11 +232,19 @@
           <input type="number" id="refreshTime" min="30" value="60" />
         </label>
 
+        <div class="notification-section-title">Notification</div>
+        <div class="notification-enable-row">
+          <input type="checkbox" id="enableTelegram" />
+          <label for="enableTelegram">Enable Telegram</label>
+        </div>
+        <div class="notification-enable-row">
+          <input type="checkbox" id="enableDiscord" />
+          <label for="enableDiscord">Enable Discord</label>
+        </div>
         <div class="tabs">
           <button class="tablinks" data-tab="telegramTab">Telegram</button>
           <button class="tablinks" data-tab="discordTab">Discord</button>
         </div>
-
         <div id="telegramTab" class="tabcontent active">
           <label>
             Chat ID:
@@ -233,7 +259,6 @@
             <input type="password" id="telegramBotToken" />
           </label>
         </div>
-
         <div id="discordTab" class="tabcontent">
           <!-- Discord settings placeholder -->
           <p>Discord settings coming soon</p>
