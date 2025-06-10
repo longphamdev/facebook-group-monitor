@@ -51,6 +51,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case "getStatus":
       getStatus(sendResponse);
       break;
+    case "clearSentList":
+      clearSentList(sendResponse);
+      break;
   }
   return true; // Keep message channel open for async response
 });
@@ -88,6 +91,15 @@ function stopTracking(sendResponse) {
 
 function getStatus(sendResponse) {
   sendResponse({ isTracking, settings: trackingSettings });
+}
+
+function clearSentList(sendResponse) {
+  // Clear the sent_list in storage
+  // remove sent_list from storage
+  chrome.storage.local.remove("sent_list", () => {
+    console.log("Sent list cleared");
+    sendResponse({ success: true });
+  });
 }
 
 // Inject scroll to bottom after every reload to fetch more data

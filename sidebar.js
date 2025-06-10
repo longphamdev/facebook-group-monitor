@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const telegramChatId = document.getElementById("telegramChatId");
   const telegramThreadId = document.getElementById("telegramThreadId");
   const telegramBotToken = document.getElementById("telegramBotToken");
-  const clearHistoryButton = document.getElementById("clearHistory");
+  const clearSentListButton = document.getElementById("clearSentList");
 
   // Load saved settings and status on startup
   loadSettings();
@@ -21,24 +21,22 @@ document.addEventListener("DOMContentLoaded", function () {
   saveButton.addEventListener("click", saveSettings);
   startButton.addEventListener("click", startTracking);
   stopButton.addEventListener("click", stopTracking);
-  if (clearHistoryButton) {
-    clearHistoryButton.addEventListener("click", async () => {
-      await chrome.storage.local.remove("sentPosts");
-      showStatus("Sent history cleared!", "success");
-    });
-  }
+  clearSentListButton.addEventListener("click", clearSentList);
 
   // Tab logic (CSP-safe, no inline handlers)
-  const tablinks = document.querySelectorAll('.tablinks');
-  const tabcontents = document.querySelectorAll('.tabcontent');
-  tablinks.forEach(btn => {
-    btn.addEventListener('click', () => {
-      tabcontents.forEach(tc => { tc.style.display = 'none'; tc.classList.remove('active'); });
-      tablinks.forEach(tl => tl.classList.remove('active'));
-      const tabId = btn.getAttribute('data-tab');
-      document.getElementById(tabId).style.display = 'block';
-      document.getElementById(tabId).classList.add('active');
-      btn.classList.add('active');
+  const tablinks = document.querySelectorAll(".tablinks");
+  const tabcontents = document.querySelectorAll(".tabcontent");
+  tablinks.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      tabcontents.forEach((tc) => {
+        tc.style.display = "none";
+        tc.classList.remove("active");
+      });
+      tablinks.forEach((tl) => tl.classList.remove("active"));
+      const tabId = btn.getAttribute("data-tab");
+      document.getElementById(tabId).style.display = "block";
+      document.getElementById(tabId).classList.add("active");
+      btn.classList.add("active");
     });
   });
   if (tablinks.length) tablinks[0].click();
@@ -51,7 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "timeOption",
         "telegramChatId",
         "telegramThreadId",
-        "telegramBotToken"
+        "telegramBotToken",
       ]);
       trackingUrlInput.value = result.trackingUrl || "";
       refreshTimeInput.value = result.refreshTime || 60;
@@ -71,7 +69,7 @@ document.addEventListener("DOMContentLoaded", function () {
       timeOption: timeOption.value,
       telegramChatId: telegramChatId.value,
       telegramThreadId: telegramThreadId.value,
-      telegramBotToken: telegramBotToken.value
+      telegramBotToken: telegramBotToken.value,
     };
     // Validate URL
     if (!settings.trackingUrl) {
@@ -124,7 +122,7 @@ document.addEventListener("DOMContentLoaded", function () {
       timeOption: timeOption.value,
       telegramChatId: telegramChatId.value,
       telegramThreadId: telegramThreadId.value,
-      telegramBotToken: telegramBotToken.value
+      telegramBotToken: telegramBotToken.value,
     };
     if (!settings.trackingUrl) {
       showStatus("Please save settings first", "error");
@@ -157,6 +155,21 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     } catch (error) {
       showStatus("Error stopping tracking", "error");
+    }
+  }
+
+  async function clearSentList() {
+    try {
+      const response = await chrome.runtime.sendMessage({
+        action: "clearSentList",
+      });
+      if (response.success) {
+        showStatus("Sent list cleared!", "success");
+      } else {
+        showStatus("Error clearing sent list", "error");
+      }
+    } catch (error) {
+      showStatus("Error clearing sent list", "error");
     }
   }
 });
