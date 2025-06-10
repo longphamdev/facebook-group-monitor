@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       trackingUrlInput.value = result.trackingUrl || "";
       afterCurrentTimeInput.value = result.afterCurrentTime || 5;
-      refreshTimeInput.value = result.refreshTime || 10;
+      refreshTimeInput.value = result.refreshTime || 30;
     } catch (error) {
       showStatus("Error loading settings", "error");
     }
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const settings = {
       trackingUrl: trackingUrlInput.value.trim(),
       afterCurrentTime: parseInt(afterCurrentTimeInput.value) || 5,
-      refreshTime: parseInt(refreshTimeInput.value) || 10,
+      refreshTime: parseInt(refreshTimeInput.value) || 30,
     };
 
     // Validate URL
@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const settings = {
       trackingUrl: trackingUrlInput.value.trim(),
       afterCurrentTime: parseInt(afterCurrentTimeInput.value) || 5,
-      refreshTime: parseInt(refreshTimeInput.value) || 10,
+      refreshTime: parseInt(refreshTimeInput.value) || 30,
     };
 
     if (!settings.trackingUrl) {
