@@ -89,11 +89,38 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       .executeScript({
         target: { tabId: tabId },
         func: () => {
-          window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: "smooth",
+          return new Promise((resolve) => {
+            const handle = () => {
+              // Check if we're at the bottom
+              if (
+                window.scrollY + window.innerHeight >=
+                document.body.scrollHeight
+              ) {
+                window.removeEventListener("scroll", handle);
+                resolve("scrolled");
+              }
+            };
+            window.scrollTo({
+              top: document.body.scrollHeight,
+              behavior: "smooth",
+            });
+            window.addEventListener("scroll", handle);
+            // Fallback: resolve after 2s in case scroll event doesn't fire
+            setTimeout(() => {
+              window.removeEventListener("scroll", handle);
+              resolve("timeout");
+            }, 5000);
           });
         },
+      })
+      .then((results) => {
+        // results[0].result will be "scrolled" or "timeout"
+        console.log("Scroll finished:", results[0]?.result);
+
+        // Ask the content script to extract posts after scrolling
+        chrome.tabs.sendMessage(tabId, { action: "extractPosts" }, (posts) => {
+          console.log("Extracted posts:", posts);
+        });
       })
       .catch((error) => console.error("Auto-scroll injection failed:", error));
   }
@@ -265,66 +292,4 @@ async function recreateTrackingTab() {
   } catch (error) {
     console.error("Error recreating tracking tab:", error);
   }
-}
-
-const processPosts = () => {
-  // Extract posts from the DOM
-  const posts = extractPostsFromDOM();
-  if (posts.length === 0) {
-    console.log("No posts found");
-    return;
-  }
-  // filter posts based on tracking settings
-  const filteredPosts = filteredPosts(posts, trackingSettings);
-  if (filteredPosts.length === 0) {
-    console.log("No posts match tracking criteria");
-    return;
-  }
-  // Send notifications for filtered posts
-  sendNotifications(filteredPosts);
-};
-
-// temporary function to simulate sending notifications
-const sendNotification = (data) => {
-  console.log("telegram send", data);
-};
-
-// temporary function to simulate filtered posts
-function filteredPosts(posts, settings) {
-  return posts;
-}
-
-function extractPostsFromDOM() {
-  const posts = [];
-  document.querySelectorAll('div[role="article"]').forEach((elem) => {
-    const author =
-      elem.querySelector('h3 a[role="link"] strong span')?.textContent.trim() ||
-      "";
-
-    // Flexible content extraction
-    const autoDivs = Array.from(elem.querySelectorAll('div[dir="auto"]'));
-    let content = "";
-    for (const div of autoDivs) {
-      const text = div.textContent.trim();
-      if (text && text !== author && !/^\d{1,2} [A-Za-z]+$/.test(text)) {
-        content = text;
-        break;
-      }
-    }
-
-    const timeElem = elem.querySelector('a[aria-label][href*="/posts/"]');
-    const time = timeElem?.textContent.trim() || "";
-    let link = timeElem?.getAttribute("href") || "";
-    if (link.startsWith("/")) link = "https://www.facebook.com" + link;
-
-    // Extract post ID from the link
-    let postId = "";
-    const match = link.match(/\/posts\/(\d+)/);
-    if (match) {
-      postId = match[1];
-    }
-
-    posts.push({ author, link, content, time, postId });
-  });
-  return posts;
 }
