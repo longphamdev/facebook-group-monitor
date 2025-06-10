@@ -134,7 +134,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
           tabId,
           { action: "extractPosts" },
           async (posts) => {
-            console.log(await filterPosts(posts));
+            sendNotification(await filterPosts(posts));
           }
         );
       })
@@ -356,4 +356,57 @@ async function filterPosts(posts) {
   });
 
   return filteredPosts;
+}
+
+// notification function
+function sendNotification(posts) {
+  // options is ["telegram","discord","email"]
+  if (!posts || posts.length === 0) {
+    console.log("No new posts to send notifications for.");
+    return;
+  }
+  // send to telegram
+  posts.forEach((post) => sendToTelegram(post));
+}
+
+async function sendToTelegram(post) {
+  const { telegramBotToken, telegramChatId, telegramThreadId } =
+    trackingSettings;
+
+  // telegram api url
+  const telegramApiUrl = `https://cf-worker-telegram.longpham16072001.workers.dev/bot${telegramBotToken}/sendMessage`;
+
+  const message = `
+New Facebook Post Detected!
+Author: ${post.author}
+Link: ${post.link}
+Content: ${post.content}
+Time: ${post.time}
+  `;
+
+  const payload = {
+    chat_id: telegramChatId,
+    text: message,
+    parse_mode: "HTML",
+  };
+
+  if (telegramThreadId) {
+    payload.message_thread_id = telegramThreadId;
+  }
+
+  try {
+    const response = await fetch(telegramApiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Telegram API error: ${response.statusText}`);
+    }
+
+    console.log(`Post sent to Telegram: ${post.postId}`);
+  } catch (error) {
+    console.error("Failed to send to Telegram:", error);
+  }
 }
