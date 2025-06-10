@@ -4,7 +4,19 @@ let trackingSettings = {};
 let isTracking = false;
 let trackingInterval = null;
 let currentTabId = null;
-
+const set10 = new Set([
+  "10m",
+  "9m",
+  "8m",
+  "7m",
+  "6m",
+  "5m",
+  "4m",
+  "3m",
+  "2m",
+  "1m",
+]);
+const set5 = new Set(["5m", "4m", "3m", "2m", "1m"]);
 // Restore state on service worker startup
 restoreTrackingState();
 
@@ -118,9 +130,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         console.log("Scroll finished:", results[0]?.result);
 
         // Ask the content script to extract posts after scrolling
-        chrome.tabs.sendMessage(tabId, { action: "extractPosts" }, (posts) => {
-          console.log("Extracted posts:", posts);
-        });
+        chrome.tabs.sendMessage(
+          tabId,
+          { action: "extractPosts" },
+          async (posts) => {
+            console.log(await filterPosts(posts));
+          }
+        );
       })
       .catch((error) => console.error("Auto-scroll injection failed:", error));
   }
@@ -292,4 +308,52 @@ async function recreateTrackingTab() {
   } catch (error) {
     console.error("Error recreating tracking tab:", error);
   }
+}
+
+// filter function
+
+async function filterPosts(posts) {
+  // Await the retrieval of sent_list from storage
+  const result = await new Promise((resolve) =>
+    chrome.storage.local.get(["sent_list"], resolve)
+  );
+  // set sentList to result.sent_list if it exists, otherwise set to empty Set
+  let sentList = result.sent_list ? new Set(result.sent_list) : new Set();
+
+  console.log("sentList", sentList);
+
+  // get timeOption from trackingSettings
+  const filteredPosts = posts.filter((post) => {
+    // check if postId is already sent
+    if (sentList.has(post.postId)) {
+      console.log(`Post ${post.postId} already sent, skipping...`);
+      return false;
+    }
+
+    // if option is 10 => get this 10m 9m 8m 7m 6m 5m 4m 3m 2m 1m
+    if (trackingSettings.timeOption === "10" && set10.has(post.time)) {
+      // add to sentList
+      sentList.add(post.postId);
+      // save sentList to storage
+      chrome.storage.local.set({ sent_list: Array.from(sentList) }, () => {
+        console.log(`Post ${post.postId} added to sent_list`);
+      });
+      return true;
+    }
+
+    // if option is 5 => get this 5m 4m 3m 2m 1m
+    if (trackingSettings.timeOption === "5" && set5.has(post.time)) {
+      // add to sentList
+      sentList.add(post.postId);
+      // save sentList to storage
+      chrome.storage.local.set({ sent_list: Array.from(sentList) }, () => {
+        console.log(`Post ${post.postId} added to sent_list`);
+      });
+      return true;
+    }
+
+    return false;
+  });
+
+  return filteredPosts;
 }

@@ -25,6 +25,8 @@ function extractPostsFromDOM() {
   return posts;
 }
 
+
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "extractPosts") {
     const posts = extractPostsFromDOM();
