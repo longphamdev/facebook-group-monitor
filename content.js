@@ -1,3 +1,10 @@
+/**
+ * Extracts Facebook post data from the current page's DOM.
+ *
+ * Iterates over all article elements representing posts and collects the author's name, post content, post time, post link, and post ID for each. Returns an array of objects containing these details for each post found.
+ *
+ * @returns {Array<{author: string, link: string, content: string, time: string, postId: string}>} An array of post objects extracted from the DOM.
+ */
 function extractPostsFromDOM() {
   const posts = [];
   document.querySelectorAll('div[role="article"]').forEach((elem) => {
